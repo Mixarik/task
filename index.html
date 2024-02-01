@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музыкальный плеер</title>
+    <style>
+        #container {
+            display: flex;
+            width: 230px;
+            flex-wrap: wrap;
+        }
+
+        .gridCell {
+            margin: 2px;
+            width: 30px;
+            height: 30px;
+            background-color: #ddd;
+        }
+
+    </style>
+</head>
+<body>
+
+<input type="file" id="fileInput" accept="audio/*">
+<audio id="audioPlayer" controls>
+    Ваш браузер не поддерживает аудио элемент.
+</audio>
+
+<div id="container"></div>
+
+<table id="table"></table>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const container = document.getElementById('container');
+
+
+    fileInput.addEventListener('change', function () {
+        const selectedFile = fileInput.files[0];
+
+        if (selectedFile) {
+            const objectURL = URL.createObjectURL(selectedFile);
+            audioPlayer.src = objectURL;
+
+            const audioContext = new AudioContext();
+            const analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaElementSource(audioPlayer);
+
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            container.innerHTML = '';
+
+            for (let i = 0; i < 36; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('gridCell');
+                container.appendChild(cell);
+            }
+
+            const gridCells = document.querySelectorAll('.gridCell');
+
+            function updateGrid() {
+                analyser.getByteFrequencyData(dataArray);
+
+                gridCells.forEach((cell, index) => {
+                    const value = dataArray[index];
+                    const hue = value / 256 * 360;
+                    cell.style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
+                });
+
+                requestAnimationFrame(updateGrid);
+            }
+
+            updateGrid();
+
+            audioPlayer.play();
+        }
+    });
+</script>
+
+</body>
+</html>
+</body>
+</html>
